@@ -42,7 +42,7 @@ func CountWords(text string, n int) int {
 	wordCount := WordsToCount(text)
 	for word, count := range wordCount {
 		if len(word) >= n {
-			total += len(word) * count
+			total += count
 		}
 	}
 
