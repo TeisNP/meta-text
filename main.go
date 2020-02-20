@@ -36,21 +36,6 @@ func WordsToCount(text string) map[string]int {
 	return wordToCount
 }
 
-// GetSentencesOrdered returns a slice of sentences
-// Sentence containing only special characters are removed
-func GetSentencesOrdered(text string) []string {
-	sentences := periodRegex.Split(text, -1)
-
-	correctSentences := sentences[:0]
-	for _, sentence := range sentences {
-		cleanedSentence := specialRegex.ReplaceAllString(sentence, "")
-		if cleanedSentence != "" {
-			correctSentences = append(correctSentences, strings.TrimSpace(sentence))
-		}
-	}
-	return correctSentences
-}
-
 // CountWords returns the number of words of at least length n
 func CountWords(text string, n int) int {
 	var total int
@@ -75,4 +60,34 @@ func AverageWordLength(text string) int {
 	}
 
 	return totalWordLen / totalWords
+}
+
+// CountSentences returns number of sentences in a text, split by [.!?] \n
+// Sentence containing only special characters are removed
+func CountSentences(text string, n int) int {
+	sentences := periodRegex.Split(text, -1)
+
+	var total int
+	for _, sentence := range sentences {
+		cleanedSentence := specialRegex.ReplaceAllString(sentence, "")
+		if cleanedSentence != "" {
+			total++
+		}
+	}
+	return total
+}
+
+// GetSentencesOrdered returns a slice of sentences \n
+// Sentence containing only special characters are removed
+func GetSentencesOrdered(text string) []string {
+	sentences := periodRegex.Split(text, -1)
+
+	correctSentences := sentences[:0]
+	for _, sentence := range sentences {
+		cleanedSentence := specialRegex.ReplaceAllString(sentence, "")
+		if cleanedSentence != "" {
+			correctSentences = append(correctSentences, strings.TrimSpace(sentence))
+		}
+	}
+	return correctSentences
 }
