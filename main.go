@@ -24,8 +24,8 @@ func init() {
 	}
 }
 
-// CountWords returns a map of every unique word (case not included) to its count
-func CountWords(text string) map[string]int {
+// WordsToCount returns a map of every unique word (case not included) to its count
+func WordsToCount(text string) map[string]int {
 	cleanedText := specialRegex.ReplaceAllString(strings.ToLower(text), " ")
 	words := strings.Fields(cleanedText)
 	wordToCount := make(map[string]int)
@@ -49,4 +49,30 @@ func GetSentencesOrdered(text string) []string {
 		}
 	}
 	return correctSentences
+}
+
+// CountWords returns the number of words of at least length n
+func CountWords(text string, n int) int {
+	var total int
+	wordCount := WordsToCount(text)
+	for word, count := range wordCount {
+		if len(word) >= n {
+			total += len(word) * count
+		}
+	}
+
+	return total
+}
+
+// AverageWordLength returns the average length of all words in the text
+func AverageWordLength(text string) int {
+	var totalWordLen int
+	var totalWords int
+	wordCount := WordsToCount(text)
+	for word, count := range wordCount {
+		totalWordLen += len(word) * count
+		totalWords += count
+	}
+
+	return totalWordLen / totalWords
 }
