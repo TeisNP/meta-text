@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/jdkato/syllables"
 )
 
 var (
@@ -92,4 +94,6 @@ func GetSentencesOrdered(text string) []string {
 	return correctSentences
 }
 
-// UPDATE PLZ
+func CountSyllables(text string) int {
+	return syllables.In(text)
+}
