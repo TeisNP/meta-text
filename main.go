@@ -8,6 +8,13 @@ import (
 	"github.com/teisnp/syllables"
 )
 
+type MetaData struct {
+	WordCount     int
+	LongWordCount int
+	PeriodCount   int
+	SyllableCount int
+}
+
 var (
 	periodRegex  *regexp.Regexp
 	specialRegex *regexp.Regexp
@@ -24,6 +31,17 @@ func init() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func CalculateMetaData(text string) MetaData {
+	metadata := MetaData{
+		WordCount:     CountWords(text, -1),
+		LongWordCount: CountWords(text, 7),
+		PeriodCount:   CountSentences(text, -1),
+		SyllableCount: CountSyllables(text),
+	}
+
+	return metadata
 }
 
 // WordsToCount returns a map of every unique word (case not included) to its count
