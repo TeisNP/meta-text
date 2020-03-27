@@ -34,13 +34,13 @@ func init() {
 	}
 }
 
-func CalculateMetaData(text string) MetaData {
+func CalculateMetaData(text *string) MetaData {
 	metadata := MetaData{
-		WordCount:     CountWords(text, -1),
-		LongWordCount: CountWords(text, 7),
-		PeriodCount:   CountSentences(text, -1),
-		SyllableCount: CountSyllables(text),
-		Text:          &text,
+		WordCount:     CountWords(*text, -1),
+		LongWordCount: CountWords(*text, 7),
+		PeriodCount:   CountSentences(*text, -1),
+		SyllableCount: CountSyllables(*text),
+		Text:          text,
 	}
 
 	return metadata
