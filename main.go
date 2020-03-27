@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jdkato/syllables"
+	"github.com/teisnp/syllables"
 )
 
 var (
