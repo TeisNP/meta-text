@@ -13,6 +13,7 @@ type MetaData struct {
 	LongWordCount int
 	PeriodCount   int
 	SyllableCount int
+	Text          *string
 }
 
 var (
@@ -39,6 +40,7 @@ func CalculateMetaData(text string) MetaData {
 		LongWordCount: CountWords(text, 7),
 		PeriodCount:   CountSentences(text, -1),
 		SyllableCount: CountSyllables(text),
+		Text:          &text,
 	}
 
 	return metadata
