@@ -1,4 +1,4 @@
-package main
+package metatext
 
 func CalculateLix(wordCount int, longWordCount int, periodCount int) int {
 	return wordCount/periodCount + (longWordCount*100)/wordCount
