@@ -29,15 +29,3 @@ func (metaData *MetaData) CalculateFleschReading() uint {
 func (metaData *MetaData) CalculateFleschGrade() uint {
 	return uint(0.39*float64((metaData.WordCount/metaData.PeriodCount)) + 11.8*float64((metaData.SyllableCount/metaData.WordCount)) - 15.59)
 }
-
-// func (metaData *MetaData) CalculateGunning() int {
-// 	return
-// }
-
-// func (metaData *MetaData) CalculateFry() int {
-// 	return
-// }
-
-// func (metaData *MetaData) CalculateFry() int {
-// 	return
-// }
