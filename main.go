@@ -9,10 +9,10 @@ import (
 )
 
 type MetaData struct {
-	WordCount     int
-	LongWordCount int
-	PeriodCount   int
-	SyllableCount int
+	WordCount     uint
+	LongWordCount uint
+	PeriodCount   uint
+	SyllableCount uint
 	Text          *string
 }
 
@@ -36,10 +36,10 @@ func init() {
 
 func CalculateMetaData(text *string) MetaData {
 	metadata := MetaData{
-		WordCount:     CountWords(*text, -1),
-		LongWordCount: CountWords(*text, 7),
-		PeriodCount:   CountSentences(*text, -1),
-		SyllableCount: CountSyllables(*text),
+		WordCount:     uint(CountWords(*text, -1)),
+		LongWordCount: uint(CountWords(*text, 7)),
+		PeriodCount:   uint(CountSentences(*text, -1)),
+		SyllableCount: uint(CountSyllables(*text)),
 		Text:          text,
 	}
 
