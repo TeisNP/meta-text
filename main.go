@@ -1,119 +1,168 @@
 package metatext
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 
 	"github.com/teisnp/syllables"
+	"gopkg.in/jdkato/prose.v2"
 )
 
-type MetaData struct {
-	WordCount     float32
-	LongWordCount float32
-	PeriodCount   float32
-	SyllableCount float32
-	Text          *string
-}
-
 var (
-	periodRegex  *regexp.Regexp
-	specialRegex *regexp.Regexp
-	err          error
+	letterRegex *regexp.Regexp
+	spaceRegex  *regexp.Regexp
+
+	err error
 )
 
 func init() {
-	periodRegex, err = regexp.Compile("[.!?]")
+	letterRegex, err = regexp.Compile(`[^A-ZÆØÅa-zæøå ][s]?|[^\w][^AIOØÅaioØÅ]{1}[^\w]{1}`)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	specialRegex, err = regexp.Compile(`[^\w]`)
+	spaceRegex, err = regexp.Compile(`[ ]{2,}`)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func CalculateMetaData(text *string) MetaData {
-	metadata := MetaData{
-		WordCount:     float32(CountWords(*text, -1)),
-		LongWordCount: float32(CountWords(*text, 7)),
-		PeriodCount:   float32(CountSentences(*text, -1)),
-		SyllableCount: float32(CountSyllables(*text)),
-		Text:          text,
-	}
-
-	return metadata
+func CleanText(text string) string {
+	cleanedText := spaceRegex.ReplaceAllString(letterRegex.ReplaceAllString(text, ""), " ")
+	return strings.ToLower(cleanedText)
 }
 
-// WordsToCount returns a map of every unique word (case not included) to its count
-func WordsToCount(text string) map[string]int {
-	cleanedText := specialRegex.ReplaceAllString(strings.ToLower(text), " ")
-	words := strings.Fields(cleanedText)
-	wordToCount := make(map[string]int)
-	for _, word := range words {
-		wordToCount[word]++
-	}
-
-	return wordToCount
+type Text struct {
+	SyllableCount   float32
+	WordCount       float32
+	TotalWordLength float32
+	LongWordCount   float32
+	Sentences       map[int]*Sentence
 }
 
-// CountWords returns the number of words of at least length n
-func CountWords(text string, n int) int {
-	var total int
-	wordCount := WordsToCount(text)
-	for word, count := range wordCount {
-		if len(word) >= n {
-			total += count
+type Sentence struct {
+	SyllableCount   float32
+	WordCount       float32
+	TotalWordLength float32
+	LongWordCount   float32
+	Words           []*Word
+}
+
+type Word struct {
+	Word          string
+	SyllableCount float32
+}
+
+func AnalyseText(text string) (*Text, error) {
+	doc, err := prose.NewDocument(text)
+	if err != nil {
+		return nil, err
+	}
+
+	sentences := doc.Sentences()
+	textData := Text{
+		Sentences: make(map[int]*Sentence),
+	}
+
+	for _, sentence := range sentences {
+		cleanedSentence := CleanText(sentence.Text)
+		if cleanedSentence != "" {
+			textData.AppendSentence(analyseSentence(cleanedSentence))
 		}
+	}
+
+	return &textData, nil
+}
+
+func (text *Text) AppendSentence(sentence *Sentence) {
+	text.SyllableCount += sentence.SyllableCount
+	text.WordCount += sentence.WordCount
+	text.TotalWordLength += sentence.TotalWordLength
+	text.LongWordCount += sentence.LongWordCount
+	text.Sentences[int(text.WordCount)] = sentence
+
+}
+
+func analyseSentence(sentence string) *Sentence {
+	words := strings.Fields(sentence)
+	sentenceData := Sentence{
+		WordCount: float32(len(words)),
+		Words:     make([]*Word, len(words)),
+	}
+
+	for i, word := range words {
+		wordData := analyseWord(word)
+		sentenceData.SyllableCount += wordData.SyllableCount
+		sentenceData.TotalWordLength += float32(len(word))
+		if len(word) > 6 {
+			sentenceData.LongWordCount++
+		}
+		sentenceData.Words[i] = wordData
+	}
+
+	return &sentenceData
+}
+
+func analyseWord(word string) *Word {
+	wordData := Word{
+		Word:          word,
+		SyllableCount: float32(syllables.In(word)),
+	}
+
+	return &wordData
+}
+
+func CountWordsWithNSyllabes(sentences map[int]*Sentence, n float32) float32 {
+	var total float32
+	for _, sentence := range sentences {
+		for _, data := range sentence.Words {
+			if data.SyllableCount >= n {
+				total += data.SyllableCount
+			}
+		}
+
 	}
 
 	return total
 }
 
-// AverageWordLength returns the average length of all words in the text
-func AverageWordLength(text string) int {
-	var totalWordLen int
-	var totalWords int
-	wordCount := WordsToCount(text)
-	for word, count := range wordCount {
-		totalWordLen += len(word) * count
-		totalWords += count
+func SamplePassage(text *Text, length int, number int) ([]*Text, error) {
+	textSplitLength := int(text.WordCount) / number
+
+	if textSplitLength < length {
+		return nil, errors.New("The text is too short for the split")
 	}
 
-	return totalWordLen / totalWords
-}
-
-// CountSentences returns number of sentences in a text, split by [.!?] \n
-// Sentence containing only special characters are removed
-func CountSentences(text string, n int) int {
-	sentences := periodRegex.Split(text, -1)
-
-	var total int
-	for _, sentence := range sentences {
-		cleanedSentence := specialRegex.ReplaceAllString(sentence, "")
-		if cleanedSentence != "" {
-			total++
+	//rand.Seed(time.Now().UnixNano())
+	passages := make([]*Text, number)
+	currentIndex := 0
+	for i := 0; i < number; i++ {
+		passage := Text{
+			Sentences: make(map[int]*Sentence),
 		}
-	}
-	return total
-}
 
-// GetSentencesOrdered returns a slice of sentences \n
-// Sentence containing only special characters are removed
-func GetSentencesOrdered(text string) []string {
-	sentences := periodRegex.Split(text, -1)
-
-	correctSentences := sentences[:0]
-	for _, sentence := range sentences {
-		cleanedSentence := specialRegex.ReplaceAllString(sentence, "")
-		if cleanedSentence != "" {
-			correctSentences = append(correctSentences, strings.TrimSpace(sentence))
+		start := rand.Intn(textSplitLength-length) + currentIndex
+		end := start + length
+		for index, sentence := range text.Sentences {
+			if start >= index {
+				continue
+			}
+			if start < index {
+				passage.AppendSentence(sentence)
+				continue
+			}
+			if end <= index {
+				passage.AppendSentence(sentence)
+				break
+			}
 		}
-	}
-	return correctSentences
-}
 
-func CountSyllables(text string) int {
-	return syllables.In(text)
+		passages[i] = &passage
+		currentIndex += textSplitLength
+	}
+
+	return passages, nil
 }
