@@ -1,10 +1,13 @@
 package metatext
 
+import "strings"
+
 func CountDifficultWordsDaleChall(text *Text) float32 {
 	difficultWordCount := 0
-	for _, sentence := range text.Sentences {
-		for _, word := range sentence.Words {
-			_, ok := daleChallWordList[word.Word]
+	for _, sentenceData := range text.Sentences {
+		sentence := text.GetSentenceText(sentenceData)
+		for _, word := range strings.Fields(sentence) {
+			_, ok := daleChallWordList[word]
 			if !ok {
 				difficultWordCount++
 			}

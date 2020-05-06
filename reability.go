@@ -1,5 +1,11 @@
 package metatext
 
+import (
+	"github.com/teisnp/syllables"
+	"math"
+	"strings"
+)
+
 // 0-55+
 func (text *Text) CalculateLix() float32 {
 	return text.WordCount/float32(len(text.Sentences)) + (text.LongWordCount*100)/text.WordCount
@@ -26,19 +32,80 @@ func (text *Text) CalculateDaleChall() float32 {
 }
 
 //6-17
-func (text *Text) CalculateGunningFog() float32 {
+func (text *Text) CalculateGunningFog() (float32, error) {
 	samples, err := SamplePassage(text, 100, 1)
 	if err != nil {
-		return -1
+		return 0.0, err
 	}
 
 	sampleText := samples[0]
 	var ASL float32 = sampleText.WordCount / float32(len(sampleText.Sentences))
-	var PHW float32 = (float32(CountWordsWithNSyllabes(sampleText.Sentences, 3)) / sampleText.WordCount)
-	return 0.4 * (ASL + PHW)
+	var PHW float32 = (float32(CountWordsWithNSyllabes(text, 3)) / sampleText.WordCount)
+	return 0.4 * (ASL + PHW), nil
 }
 
 // 108-174, 2-25+
-func (text *Text) CalculateFryGraph() (float32, float32) {
-	return text.SyllableCount / (text.WordCount / 100), float32(len(text.Sentences)) / (text.WordCount / 100)
+func (text *Text) CalculateFryGraph() (float32, float32, error) {
+	samples, err := SamplePassage(text, 100, 3)
+	if err != nil {
+		return 0.0, 0.0, err
+	}
+
+	var syllableCount float32
+	var wordCount float32
+	var sentenceCount float32
+	for _, sample := range samples {
+		for _, sentence := range sample.Sentences {
+			syllableCount += sentence.SyllableCount
+			wordCount += sentence.WordCount
+			sentenceCount++
+		}
+	}
+
+	return syllableCount / (wordCount / 100), sentenceCount / (wordCount / 100), nil
+}
+
+// 5- 18
+func (text *Text) CalculateSmog() (float64, error) {
+	sentences, err := sampleSenteces(text, 10, 3)
+	if err != nil {
+		return 0.0, err
+	}
+	threeWordSyllableCount := 0
+	for _, sentenceData := range sentences {
+		sentence := text.GetSentenceText(sentenceData)
+		for _, word := range strings.Fields(sentence) {
+			if syllables.In(word) > 2 {
+				threeWordSyllableCount++
+			}
+		}
+	}
+
+	return 3 + math.Sqrt(float64(threeWordSyllableCount)), nil
+}
+
+// Recommended 9-10
+func (text *Text) CalculateForcast() (float64, error) {
+	samples, err := SamplePassage(text, 150, 1)
+	if err != nil {
+		return 0.0, err
+	}
+
+	oneWordSyllableCount := 0.0
+	sampledText := (*samples[0])
+	for _, sentence := range sampledText.Sentences {
+		for _, word := range strings.Fields(sampledText.GetSentenceText(sentence)) {
+			if syllables.In(word) > 2 {
+				oneWordSyllableCount++
+			}
+		}
+	}
+
+	return 20.0 - (oneWordSyllableCount / 10), nil
+}
+
+// Syntactic Density Score
+// 1-4
+func (text *Text) CalculateSDS() float64 {
+	return 0.0
 }
