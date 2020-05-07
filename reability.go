@@ -1,10 +1,39 @@
 package metatext
 
 import (
-	"github.com/teisnp/syllables"
+	"fmt"
 	"math"
 	"strings"
+
+	"github.com/teisnp/syllables"
 )
+
+func (text *Text) CalculateReadabilityIndex(index int) (float32, error) {
+	switch index {
+	case 0:
+		return text.CalculateLix(), nil
+	case 1:
+		return text.CalculateFleschReading(), nil
+	case 2:
+		return text.CalculateFleschGrade(), nil
+	case 3:
+		return text.CalculateDaleChall(), nil
+	case 4:
+		index, err := text.CalculateGunningFog()
+		return index, err
+	case 5:
+		x, y, err := text.CalculateFryGraph()
+		return x + y, err
+	case 6:
+		index, err := text.CalculateSmog()
+		return index, err
+	case 7:
+		index, err := text.CalculateForcast()
+		return index, err
+	default:
+		return 0, fmt.Errorf("Readbility index calculation not supported for case: %d", index)
+	}
+}
 
 // 0-55+
 func (text *Text) CalculateLix() float32 {
@@ -66,12 +95,12 @@ func (text *Text) CalculateFryGraph() (float32, float32, error) {
 }
 
 // 5- 18
-func (text *Text) CalculateSmog() (float64, error) {
+func (text *Text) CalculateSmog() (float32, error) {
 	sentences, err := sampleSenteces(text, 10, 3)
 	if err != nil {
 		return 0.0, err
 	}
-	threeWordSyllableCount := 0
+	var threeWordSyllableCount float32
 	for _, sentenceData := range sentences {
 		sentence := text.GetSentenceText(sentenceData)
 		for _, word := range strings.Fields(sentence) {
@@ -81,17 +110,17 @@ func (text *Text) CalculateSmog() (float64, error) {
 		}
 	}
 
-	return 3 + math.Sqrt(float64(threeWordSyllableCount)), nil
+	return float32(3 + math.Sqrt(float64(threeWordSyllableCount))), nil
 }
 
 // Recommended 9-10
-func (text *Text) CalculateForcast() (float64, error) {
+func (text *Text) CalculateForcast() (float32, error) {
 	samples, err := SamplePassage(text, 150, 1)
 	if err != nil {
 		return 0.0, err
 	}
 
-	oneWordSyllableCount := 0.0
+	var oneWordSyllableCount float32
 	sampledText := (*samples[0])
 	for _, sentence := range sampledText.Sentences {
 		for _, word := range strings.Fields(sampledText.GetSentenceText(sentence)) {
