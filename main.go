@@ -125,7 +125,7 @@ func CountWordsWithNSyllabes(text *Text, n int) int {
 
 func sampleSenteces(text *Text, length int, number int) ([]*Sentence, error) {
 	sentenceSplit := len(text.Sentences) / number
-	if sentenceSplit < length {
+	if sentenceSplit <= length {
 		return nil, errors.New("The text is too short for the split")
 	}
 
@@ -145,7 +145,7 @@ func sampleSenteces(text *Text, length int, number int) ([]*Sentence, error) {
 func SamplePassage(text *Text, length int, number int) ([]*Text, error) {
 	textSplitLength := int(text.WordCount) / number
 
-	if textSplitLength < length {
+	if textSplitLength <= length {
 		return nil, errors.New("The text is too short for the split")
 	}
 
