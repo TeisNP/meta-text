@@ -155,7 +155,7 @@ func SamplePassage(text *Text, length int, number int) ([]*Text, error) {
 		startWordindex := rand.Intn(textSplitLength-length) + i*textSplitLength
 
 		start, err := text.wordIndexToStringIndex(startWordindex)
-		end, err := text.wordIndexToStringIndex(startWordindex + length)
+		end, err := text.wordIndexToStringIndex(startWordindex + length - 1)
 
 		passageText, err := AnalyseText(text.Text[start:end])
 		if err != nil {
